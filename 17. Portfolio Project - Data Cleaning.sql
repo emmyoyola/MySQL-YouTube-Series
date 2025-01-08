@@ -1,14 +1,15 @@
 -- Data Cleaning
 
+SELECT *
+FROM layoffs;
 
 -- 1. Remove Duplicates
 -- 2. Standardize the data
 -- 3. Null values or blank values
 -- 4. Remove any column
 
--- CREAR UNA COPIA
-SELECT *
-FROM layoffs;
+
+-- CREATE A COPY 
 
 CREATE TABLE layoffs_staging
 LIKE layoffs;
@@ -20,7 +21,7 @@ FROM layoffs;
 SELECT *
 FROM layoffs_staging;
 
--- REMOVE DUPLICATES
+-- 1. REMOVE DUPLICATES
 	-- Encontrar filas que tienen todas las columnas repetidas
     
 WITH duplicates_CTE AS
@@ -34,7 +35,7 @@ FROM duplicates_CTE
 WHERE row_num > 1;
 
 
-	-- Revisar uno de lps resultados anteriores
+	-- Revisar uno de los resultados anteriores para confirmar si son duplicados
 
 SELECT *
 FROM layoffs_staging
@@ -53,7 +54,7 @@ CREATE TABLE `layoffs_staging2` (
   `stage` text,
   `country` text,
   `funds_raised_millions` int DEFAULT NULL,
-  `row_num` int
+  `row_num` int 									# New colum
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
  
 INSERT INTO layoffs_staging2
@@ -75,20 +76,24 @@ SELECT *
 FROM layoffs_staging2
 WHERE row_num >1;
 
--- 	STANDARDIZING DATA
-	-- company
+
+-- 2. STANDARDIZING DATA
+	
+    -- company
 UPDATE layoffs_staging2
 SET company = TRIM(company);
 
 SELECT *
 FROM layoffs_staging2;
 
+
 	-- industry
 SELECT DISTINCT industry
 FROM layoffs_staging2
 ORDER BY industry;
 		
-        -- Cripto
+        
+        -- Crypto
 SELECT *
 FROM layoffs_staging2
 WHERE industry LIKE 'Crypto%';
@@ -96,6 +101,7 @@ WHERE industry LIKE 'Crypto%';
 UPDATE layoffs_staging2
 SET industry = 'Crypto'
 WHERE industry LIKE 'Crypto%';
+
 
 	-- Country
 SELECT DISTINCT country
@@ -107,7 +113,6 @@ SET country = TRIM(TRAILING '.' FROM country)
 WHERE country LIKE 'United States%';
 
 	-- date
-
 UPDATE layoffs_staging2
 SET `date` = str_to_date(`date`, '%m/%d/%Y');
 
@@ -117,7 +122,7 @@ FROM layoffs_staging2;
 ALTER TABLE layoffs_staging2
 MODIFY COLUMN `date` date;
 
-	-- Null values
+	-- 3. NULL VALUES
     # Cambiar los '' por null
 UPDATE layoffs_staging2
 SET industry = NULL
@@ -144,11 +149,13 @@ SELECT *
 FROM layoffs_staging2
 WHERE company = "Bally's Interactive";
 
+# Eliminar los registros con total_laid_off y total_laid_off nulos
 DELETE
 FROM layoffs_staging2
-WHERE total_laid_off IS NULL AND percentage_laid_off IS NULL;
+WHERE total_laid_off IS NULL AND total_laid_off IS NULL;
 
-	-- Remove columns
+
+	-- 4. REMOVE COLUMNS
 ALTER TABLE layoffs_staging2
 DROP COLUMN row_num;
 
